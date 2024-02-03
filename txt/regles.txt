@@ -1,0 +1,287 @@
+% Regle qui négative le r_pos Nom pour un adjectif car collé à un nom
+1
+$x r_pos Nom:
+& $x r_pos Adj:
+& $y r_pos Nom:
+& $z r_pos Ver:
+& $x r_succ $y
+& $y r_succ $z
+=> $x !r_pos Nom:
+
+% Regles qui donne le type Verbe au lemme du verbe courant
+$x r_pos Ver:
+& $x r_lemma $y
+=> $y r_pos Ver:
+
+% Regle qui identifie l'agent de la phrase sans adjectif ("le chat boit du lait")
+$x r_pos Det:
+& $y r_pos Nom:
+& $z r_pos Ver:
+& $x r_succ $y
+& $y r_succ $z
+=> $z r_agent $y
+& $y r_agent-1 $z
+
+% Regle qui identifie le patient de la phrase ("Le chat boit du lait")
+$x r_pos Ver:
+& $y r_pos Det:
+& $z r_pos Nom: 
+& $x r_succ $y
+& $y r_succ $z
+=> $x r_patient $z
+& $z r_patient-1 $x
+
+% Regle identifie comme agent  le lemme de l'agent
+% $x r_agent-1 $y
+% & $y r_lemma $z 
+% => $x r_agent-1 $z
+
+
+% Regle qui negative le pronom feminin quand c'est un determinant
+2
+$x r_pos Det:
+& $y r_pos Nom:
+& $x r_pos Gender:Fem
+& $y r_pos Gender:Fem
+& $x r_succ $y
+=> $x !r_qui_pro_fem $y
+
+
+% Règle qui "Le facteur est blond. Il fait le ménage" nous dit que Il est le facteur => il r_qui_pro_mas facteur
+1
+$x r_pos Pro:
+& $y r_pos Nom:
+& $x r_pos Gender:Mas
+& $y r_pos Gender:Mas
+& $x !r_pos Gender:Fem
+& $y !r_pos Gender:Fem
+& $x !r_succ $y
+=> $x r_qui_pro_mas $y
+
+% Règle qui "La fille est blonde. Elle mange" nous dit que Elle est la fille => elle r_qui_pro_fem fille
+$x r_pos Pro:
+& $y r_pos Nom:
+& $x r_pos Gender:Fem
+& $y r_pos Gender:Fem
+& $x !r_pos Gender:Mas
+& $y !r_pos Gender:Mas
+& $x !r_succ $y
+=> $x r_qui_pro_fem $y
+
+% Règle qui attache le déterminant d'un nom au masculin "Le chat" on a que => le r_qui_det_mas chat
+1
+$x r_pos Det:
+& $y r_pos Nom:
+& $x r_pos Gender:Mas
+& $y r_pos Gender:Mas
+& $x !r_pos Gender:Fem
+& $y !r_pos Gender:Fem
+& $x r_succ $y
+=> $x r_qui_det_mas $y
+
+% Règle qui attache le déterminant d'un nom au féminin "La poubelle" on a que => la r_qui_det_fem poubelle
+1
+$x r_pos Det:
+& $y r_pos Nom:
+& $x r_pos Gender:Fem
+& $y r_pos Gender:Fem
+& $x !r_pos Gender:Mas
+& $y !r_pos Gender:Mas
+& $x r_succ $y
+=> $x r_qui_det_fem $y
+
+% règle pour trouver un groupe nomianl petit (genre 'le chat')
+6
+$x r_pos Det:
+& $y r_pos Nom:
+& $x r_succ $y
+& GN: !GN_part_of $x
+& GN: !GN_part_of $y
+=> GN: GN_part_of $x
+& GN: GN_part_of $y
+& GN: GN_det $x
+& GN: GN_sujet $y
+
+% règle pour trouver un groupe verbal
+7
+$z r_pos Det:
+& $y r_pos Ver:
+& $g1 GN_part_of $x
+& $g2 GN_part_of $z
+& $x r_succ $y
+& $y r_succ $z
+=> GV: GV_agent $g1
+& GV: GV_patient $g2
+& GV: GV_ver $y
+
+
+
+% Regle pour creer un GN qui n'est pas déja dans un GN dans une phrase où il y a deux adj du mot avant/apres le nom "une grande pizza rouge"
+1
+$x r_pos Det:
+& $y r_pos Adj:
+& $z r_pos Nom:
+& $t r_pos Adj:
+& $x r_succ $y
+& $y r_succ $z
+& $z r_succ $t
+& GN: !GN_part_of $x
+& GN: !GN_part_of $y
+& GN: !GN_part_of $z
+& GN: !GN_part_of $t
+=> GN: GN_part_of $x
+& GN: GN_part_of $y
+& GN: GN_part_of $z
+& GN: GN_part_of $t
+& GN: GN_det $x
+& GN: GN_sujet $z
+
+% Regle pour creer un GN qui n'est pas déja dans un GN dans une phrase où l'adj du mot est avant le nom "une grande pizza"
+$x r_pos Det:
+& $y r_pos Adj:
+& $z r_pos Nom:
+& $x r_succ $y
+& $y r_succ $z
+& GN: !GN_part_of $x
+& GN: !GN_part_of $y
+& GN: !GN_part_of $z
+& GN: !GN_det $x
+& GN: !GN_sujet $z
+=> GN: GN_part_of $x
+& GN: GN_part_of $y
+& GN: GN_part_of $z
+& GN: GN_det $x
+& GN: GN_sujet $z
+
+% Regle pour creer un GN qui n'est pas déja dans un GN dans une phrase où l'adj du mot est après le nom "une pizza délicieuse"
+$x r_pos Det:
+& $y r_pos Nom:
+& $z r_pos Adj:
+& $x r_succ $y
+& $y r_succ $z
+& GN: !GN_part_of $x
+& GN: !GN_part_of $y
+& GN: !GN_part_of $z
+& GN: !GN_det $x
+& GN: !GN_sujet $y
+=> GN: GN_part_of $x
+& GN: GN_part_of $y
+& GN: GN_part_of $z
+& GN: GN_det $x
+& GN: GN_sujet $y
+
+% Regle qui va demander a JDM si une relation est vrai puis en negativer une% Le facteur passe. Il distribue le courrier.
+$x r_pos Pro:Pers
+& $x r_pos Gender:Mas
+& $y r_pos Gender:Mas
+& $z r_pos Gender:Mas
+& $x r_qui_pro_mas $y
+& $x r_qui_pro_mas $z
+& $v r_pos Ver:
+& $x r_succ $v
+=> ['$y','$z'] JDM+r_agent+r_qui_pro_mas ['$x','$v']
+
+% Regle qui va demander a JDM si une relation est vrai puis en negativer une% Le facteur passe. Il distribue le courrier.
+$x r_pos Pro:Pers
+& $x r_pos Gender:Fem
+& $y r_pos Gender:Fem
+& $z r_pos Gender:Fem
+& $x r_qui_pro_fem $y    
+& $x r_qui_pro_fem $z
+& $v r_pos Ver:
+& $x r_succ $v
+=> ['$y','$z'] JDM+r_agent+r_qui_pro_fem ['$x','$v']
+
+
+% Regle qui donne l'agent du verbe dans le GN
+$t r_pos Ver:
+& $z r_succ $t
+& $a GN_part_of $z
+& $a GN_sujet $y
+=> $y r_agent $t
+$t r_agent-1 $y
+
+% Regles qui negative lepronom si c'est un determinant
+2
+$x r_pos Det:
+& $y r_pos Nom:
+& $x r_pos Gender:Mas
+& $y r_pos Gender:Mas
+& $x r_succ $y
+=> $x !r_qui_pro_mas $y
+
+% Regle qui va negativer les pro si lemot est utiliser en determinant
+$x r_qui_pro_mas $y
+$x r_succ $y
+$x !r_pos Pro:
+=> $x !r_qui_pro_mas $y
+
+% Regle qui negative un r_qui_pro_mas si il est determinant et masculin
+$x r_pos Det:
+$y r_pos Nom:
+$x r_succ $y
+$x r_qui_det_mas $y
+$x r_qui_pro_mas $y
+=> $x !r_qui_pro_mas $y
+
+% Regle qui negative un r_qui_pro_mas si il est determinant et feminin
+$x r_pos Det:
+$y r_pos Nom:
+$x r_succ $y
+$x r_qui_det_fem $y
+$x r_qui_pro_fem $y
+=> $x !r_qui_pro_fem $y
+
+
+
+% Regle qui negative les pronoms pour des determinants
+$x r_pos Pro:
+& $y r_pos Nom:
+& $x r_succ $y
+& $x r_pos Det:
+=> $x !r_pos Pro:%
+
+% Regle qui negative les pronoms pour des determinants dasn un GN
+$x r_pos Pro:
+& $y r_pos Nom:
+& $x r_pos Det:
+& GN: GN_part_of $x
+& GN: GN_part_of $y
+& GN: GN_det $x
+& GN: GN_sujet $y
+=> $x !r_pos Pro:%
+
+% Regle qui negative les déterminant qui sont des pronoms car suivis d'un verbe
+$x r_pos Det:
+& $x r_pos Pro:
+& $y r_pos Ver:
+& $x r_succ $y
+=> $x !r_pos Det:
+
+% Regle qui negative les pronom pour le determinant d'un GN
+$y r_pos Det:
+& $y r_pos Pro:
+& $x GN_det $y
+=> $y !r_pos Pro:%
+
+% Masculinise le nom qui est dans les deux categories pcq le determinant est Mas
+999
+$x r_pos Det:
+& $x r_pos Gender:Mas
+& $y r_pos Gender:Fem
+& $y r_pos Gender:Mas
+& $y r_pos Nom:
+& $x r_succ $y
+=> $y !r_pos Gender:Fem
+
+% Feminise le nom qui est dnas les deux categories pcq le determinant est Fem
+999
+$x r_pos Det:
+& $x r_pos Gender:Fem
+& $y r_pos Gender:Fem
+& $y r_pos Gender:Mas
+& $y r_pos Nom:
+& $x r_succ $y
+=> $y !r_pos Gender:Mas
+
+
